@@ -25,4 +25,26 @@ def test_excludes_recipe_above_requested_minutes(monkeypatch):
 
 
 
+def test_does_not_modify_user_input(monkeypatch):
+    """The recommendation function must not mutate its input data."""
+
+    recipes = pd.DataFrame(
+        {
+            "name": ["Vegetable recipe"],
+            "minutes": [20],
+            "n_steps": [5],
+            "n_ingredients": [5],
+            "food types": ["Veg"],
+            "score": [4.9],
+        }
+    )
+
+    monkeypatch.setattr(recommend, "df", recipes)
+
+    user_data = ["Veg", "30", "10", "10"]
+    original_user_data = user_data.copy()
+
+    recommend.filter_database(user_data)
+
+    assert user_data == original_user_data
 
