@@ -70,23 +70,23 @@ def filter_database(userData):
     userData[2] = int(userData[2])
     userData[3] = int(userData[3])
 
-    # incrementing for proper functioning in range()
-    userData[1]+=userData[1]
-    userData[2]+=userData[2]
-    userData[3]+=userData[3]
 
 
-    # Filtering data by time (in minutes) required to prepare
-    m = df_filtered['minutes'].isin(range(0, userData[1]))
-    df_filtered = df_filtered[m]
 
-    # Filtering data by number of steps required to prepare
-    s = df_filtered['n_steps'].isin(range(0, userData[2]))
-    df_filtered = df_filtered[s]
+    # Filtering recipes using inclusive maximum limits
+    df_filtered = df_filtered[
+        df_filtered["minutes"] <= userData[1]
+    ] 
 
-    # Filtering data by number of ingredients required to prepare
-    i = df_filtered['n_ingredients'].isin(range(0, userData[3]))
-    df_filtered = df_filtered[i]                                    # final filtered data frame 
+    df_filtered = df_filtered[
+        df_filtered["n_steps"] <= userData[2]
+    ]                             
+
+    df_filtered = df_filtered[
+        df_filtered["n_ingredients"] <= userData[3]
+    ]
+
+      # final filtered data frame 
 
 
 
