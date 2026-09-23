@@ -1,90 +1,79 @@
-from flask import Flask, request, jsonify
-from recommend import *     # imports functions from recommend.py
+from flask import Flask, jsonify, request
+from recommend import filter_database
 
-"""
-
-    Description:
-        This file runs the backend for API responses.
-
-    Routes:
-        route('/'): main API page.
-        route('/api/test'): for testing if API GET and POST calls are working.
-        route('/api/rec'): for receiving JSON data and passing array data to recommend.py
-
-"""
-
-# declare constants for connection
-HOST = '0.0.0.0'
+HOST = "0.0.0.0"
 PORT = 5000
 
-# initialize flask application
+REQUIRED_FIELDS = ("type", "mins", "step", "ingr")
+
 app = Flask(__name__)
 
-
-# sample page
-@app.route('/')
+@app.route("/")
 def api():
-    """
-    Description:
-        Main api endpoint (unused)
-    """
+    """Return the main API page."""
+
     return "<h1>API</h1>"
 
 
-# api endpoint for test
-@app.route('/api/test', methods=['GET', 'POST'])
+@app.route("/api/test", methods=["GET", "POST"])
 def test():
-    """
-    Description:
-        Test api endpoint used only for testing connection, ports and request methods
-    """
-    if request.method == 'POST':
-        return jsonify({'test': 'POST success'})
-    else:
-        return jsonify({'test': 'GET success'})
+    """Verify that the API accepts GET and POST requests."""
+
+    if request.method == "POST":
+        return jsonify({"test": "POST success"})
+
+    return jsonify({"test": "GET success"})
 
 
-userData = []
-# api endpoint for recommendation
-@app.route('/api/rec', methods=['POST'])
+@app.route("/api/rec", methods=["POST"])
 def rec():
-    """
-    Description:
-        Test api endpoint used only for testing connection, ports and request methods.
-
-    Parameters:
-        userData (array): The user input data recived from JSON request.
+    """Verify that the API accepts GET and POST requests."""
     
-    Returns:
-        recommendation (JSON): Gives recipe JSON data to respone.
+    json_data = request.get_json(silent=True)
 
-    Used by:
-        Responds to POST api request from frontend.
+    if not isinstance(json_data, dict):
+        return jsonify(
+            {"error": "Request body must be valid JSON"}
+        ), 400
 
-    Requires:
-        recommend.py for recommendation function.
+    missing_fields = [
+        field
+        for field in REQUIRED_FIELDS
+        if field not in json_data
+    ]
 
-    """
-    if request.method == 'POST':
-        # get formData from post request
-        jsonData = request.get_json('Finput')
-        # print("*****JSON data from frontend", jsonData, type(jsonData))
+    if missing_fields:
+        missing_names = ", ".join(missing_fields)
 
-        # storing user data from json in array
-        userData.clear()
-        userData.append(jsonData.get('type'))
-        userData.append(jsonData.get('mins'))
-        userData.append(jsonData.get('step'))
-        userData.append(jsonData.get('ingr'))
-        # print("*****user data array from frontend", userData)
+        return jsonify(
+            {
+                "error": (
+                    f"Missing required fields: {missing_names}"
+                )
+            }
+        ), 400
 
-        # passing user data for filtering
-        recommendation = filter_database(userData)     # calls function from recommend.py
+    user_data = [
+        json_data[field]
+        for field in REQUIRED_FIELDS
+    ]
 
-        return jsonify(recommendation)
-    # else:
-    #     return jsonify({'description': 'POST not used'})
+    try:
+        recommendation = filter_database(user_data)
+    except (TypeError, ValueError):
+        return jsonify(
+            {"error": "Recipe limits must be numeric"}
+        ), 400
+
+    return jsonify(recommendation)
 
 
-if __name__ == '__main__':
-    app.run(host=HOST, debug=True, port=PORT)
+if __name__ == "__main__":
+    app.run(
+        host=HOST,
+        debug=True,
+        port=PORT,
+    )
+
+
+
