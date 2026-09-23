@@ -11,6 +11,23 @@ from pathlib import Path
 
 """
 
+DEFAULT_MAX_MINUTES = 999
+DEFAULT_MAX_STEPS = 99
+DEFAULT_MAX_INGREDIENTS = 99
+
+
+def _parse_limit(value, default_value):
+    """Convert a user limit without modifying the original input."""
+
+    if value == "":
+        return default_value
+
+    parsed_value = int(value)
+
+    if parsed_value < 0:
+        return default_value
+
+    return parsed_value
 
 # database_file = "backend/database/recipeData.csv"                   # direct path for windows development
 
@@ -19,14 +36,14 @@ database_file = Path.cwd() / "database" / "recipeData.csv"          # for gettin
 df = pd.read_csv(database_file)     # Main data frame
 
 
-def filter_database(userData):
+def filter_database(user_data):
     """
 
     Description:
         This function filters dataset according to input and gives recommendation in (dict) format for easy jsonify.
       
     Parameters:
-        userData (array): The user input data recived from app.py.
+        user_data (list): User preferences and maximum recipe limits.
     
     Returns:
         df_final (dict): Recipe recommendation.
@@ -39,9 +56,22 @@ def filter_database(userData):
 
     """
 
+    food_type = user_data[0]
+    max_minutes = _parse_limit(
+        user_data[1],
+        DEFAULT_MAX_MINUTES,
+    )
+    max_steps = _parse_limit(
+        user_data[2],
+        DEFAULT_MAX_STEPS,
+    )
+    max_ingredients = _parse_limit(
+        user_data[3],
+        DEFAULT_MAX_INGREDIENTS,
+    )
 
     # Filter data by type of food
-    match userData[0]:
+    match food_type:
         case 'Healthy':
             th = df['food types'].isin(['Healthy'])
             df_filtered = df[th]
@@ -60,32 +90,18 @@ def filter_database(userData):
 
 
 
-    # if unfilled data, set no filter
-    if (userData[1] == '' or int(userData[1]) < 0) : userData[1] = '999'
-    if (userData[2] == '' or int(userData[2]) < 0) : userData[2] = '99'
-    if (userData[3] == '' or int(userData[3]) < 0) : userData[3] = '99'
-
-    # coverting to int for range
-    userData[1] = int(userData[1])
-    userData[2] = int(userData[2])
-    userData[3] = int(userData[3])
-
-
-
-
-    # Filtering recipes using inclusive maximum limits
+    #Filter recipes using inclusive maximum limits
     df_filtered = df_filtered[
-        df_filtered["minutes"] <= userData[1]
-    ] 
-
-    df_filtered = df_filtered[
-        df_filtered["n_steps"] <= userData[2]
-    ]                             
-
-    df_filtered = df_filtered[
-        df_filtered["n_ingredients"] <= userData[3]
+        df_filtered["minutes"] <= max_minutes
     ]
 
+    df_filtered = df_filtered[
+        df_filtered["n_steps"] <= max_steps
+    ]
+
+    df_filtered = df_filtered[
+        df_filtered["n_ingredients"] <= max_ingredients
+    ]
       # final filtered data frame 
 
 
