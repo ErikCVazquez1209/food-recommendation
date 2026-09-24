@@ -15,6 +15,13 @@ DEFAULT_MAX_MINUTES = 999
 DEFAULT_MAX_STEPS = 99
 DEFAULT_MAX_INGREDIENTS = 99
 
+FOOD_TYPE_MAP = {
+    "Healthy": "Healthy",
+    "Veg": "Veg",
+    "Non-Veg": "Non-veg",
+    "Veg_Dessert": "Veg dessert",
+    "Non-Veg_Dessert": "Non-Veg dessert",
+}
 
 def _parse_limit(value, default_value):
     """Convert a user limit without modifying the original input."""
@@ -71,22 +78,15 @@ def filter_database(user_data):
     )
 
     # Filter data by type of food
-    match food_type:
-        case 'Healthy':
-            th = df['food types'].isin(['Healthy'])
-            df_filtered = df[th]
-        case 'Veg':
-            tv = df['food types'].isin(['Veg'])
-            df_filtered = df[tv]
-        case 'Non-Veg':
-            tnv = df['food types'].isin(['Non-veg'])
-            df_filtered = df[tnv]
-        case 'Veg_Dessert':
-            tdv = df['food types'].isin(['Veg dessert'])
-            df_filtered = df[tdv]
-        case 'Non-Veg_Dessert':
-            tdnv = df['food types'].isin(['Non-Veg dessert'])
-            df_filtered = df[tdnv]
+       # Validate and translate the requested food category
+    if food_type not in FOOD_TYPE_MAP:
+        raise ValueError("Invalid food type")
+
+    dataset_food_type = FOOD_TYPE_MAP[food_type]
+
+    df_filtered = df[
+        df["food types"] == dataset_food_type
+    ]
 
 
 

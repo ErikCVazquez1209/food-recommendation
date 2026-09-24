@@ -1,5 +1,5 @@
 from flask import Flask, jsonify, request
-from recommend import filter_database
+from recommend import FOOD_TYPE_MAP, filter_database
 
 HOST = "0.0.0.0"
 PORT = 5000
@@ -53,6 +53,12 @@ def rec():
             }
         ), 400
 
+    if json_data["type"] not in FOOD_TYPE_MAP:
+        return jsonify(
+            {"error": "Invalid food type"}
+        ), 400
+
+    
     user_data = [
         json_data[field]
         for field in REQUIRED_FIELDS
